@@ -8,9 +8,8 @@ class ShowerPrimaryID(Transform):
     def __init__(self, name='particletype'):
         super().__init__()
         self.shower_primary_id_to_class = {
-            0: 1,    # gamma
-            101: 0,  # proton
-            1: 2     # electron
+            0: 1,  # gamma
+            101: 0  # proton
         }
         self.name = name
         self.dtype = np.dtype('int8')
