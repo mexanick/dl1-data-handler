@@ -15,6 +15,7 @@ class ImageMapper:
 
     def __init__(self,
                  camera_types=None,
+                 camera_geometries=None,
                  pixel_positions=None,
                  mapping_method=None,
                  padding=None,
@@ -25,6 +26,7 @@ class ImageMapper:
         # when multiple instances of ImageMapper are created
         self.image_shapes = {
             'LSTCam': (110, 110, 1),
+            'LSTSiPMCam': (234, 234, 1),
             'FlashCam': (112, 112, 1),
             'NectarCam': (110, 110, 1),
             'SCTCam': (120, 120, 1),
@@ -76,15 +78,20 @@ class ImageMapper:
 
         for camtype in self.camera_types:
             # Get a corresponding pixel positions
-            if pixel_positions is None:
-                try:
-                    from ctapipe.instrument.camera import CameraGeometry
-                except ImportError:
-                    raise ImportError("The `ctapipe.instrument.camera` python module is required, if pixel_positions is `None`.")
-                camgeo = CameraGeometry.from_name(camtype)
+            if pixel_positions is None or pixel_positions.get(camtype, None) is None:
+                if camera_geometries is None or camera_geometries.get(camtype, None) is None:
+                    try:
+                        from ctapipe.instrument.camera import CameraGeometry
+                        camgeo = CameraGeometry.from_name(camtype)
+                    except ImportError:
+                        raise ImportError("The `ctapipe.instrument.camera` python module is required, if pixel_positions is `None`.")
+                    except FileNotFoundError:
+                        raise FileNotFoundError(f"The geometry file for {camtype} can't be found. Please provide the geometry as input")
+                else:
+                    camgeo = camera_geometries[camtype]
                 self.num_pixels[camtype] = len(camgeo.pix_id)
                 self.pixel_positions[camtype] = np.column_stack([camgeo.pix_x.value, camgeo.pix_y.value]).T
-                if camtype in ['LSTCam', 'NectarCam', 'MAGICCam']:
+                if camtype in ['LSTCam', 'LSTSiPMCam', 'NectarCam', 'MAGICCam']:
                     rotation_angle = -camgeo.pix_rotation.value * np.pi/180.0
                     rotation_matrix = np.matrix([[np.cos(rotation_angle), -np.sin(rotation_angle)],
                                                  [np.sin(rotation_angle), np.cos(rotation_angle)]], dtype=float)

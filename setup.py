@@ -16,7 +16,7 @@ setup(name='dl1_data_handler',
           'tables>=3.4.4',
           'uproot==3.12.0',
           'pytest-cov',
-          'ctapipe==0.9.1',
+          'ctapipe>=0.9.1',
           ],
       dependency_links=[],
       zip_safe=True)
